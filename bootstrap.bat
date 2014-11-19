@@ -50,7 +50,7 @@ goto :EOF
     if defined COMNTOOLS (
       endlocal
       echo "Calling %COMNTOOLS%vsvars32.bat"
-      call "%COMNTOOLS%vsvars32.bat" > nul'
+      call "%COMNTOOLS%vsvars32.bat" > nul
       setlocal
       echo.
     ) else (
