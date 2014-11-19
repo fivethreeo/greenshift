@@ -9,10 +9,8 @@ Open a cmd shell in this dir and run
 
 .. code-block:: bash
 
-    bootstrap.bat
+    configure.bat
 
-Answer the questions given
+    build.bat
 
-Run build.bat
-
-Run run.bat
+    run.bat
