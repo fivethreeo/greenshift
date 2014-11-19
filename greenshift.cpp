@@ -96,15 +96,30 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     MSG Message;
     Message.message = ~WM_QUIT;
     Mat frame, hsv, thresholded;
-    
+    /*
     int iLowH = 69;
     int iHighH = 101;
-    
+    */
+    int iLowH = 32;
+    int iHighH = 51;
+        
     int iLowS = 18; 
     int iHighS = 255;
     
     int iLowV = 72;
     int iHighV = 239;
+    
+    namedWindow("Control", CV_WINDOW_AUTOSIZE); //create a window called "Control"
+
+ //Create trackbars in "Control" window
+ cvCreateTrackbar("LowH", "Control", &iLowH, 179); //Hue (0 - 179)
+ cvCreateTrackbar("HighH", "Control", &iHighH, 179);
+
+  cvCreateTrackbar("LowS", "Control", &iLowS, 255); //Saturation (0 - 255)
+ cvCreateTrackbar("HighS", "Control", &iHighS, 255);
+
+  cvCreateTrackbar("LowV", "Control", &iLowV, 255); //Value (0 - 255)
+ cvCreateTrackbar("HighV", "Control", &iHighV, 255);
     
     //Step 1: Registering the Window Class
     wc.cbSize        = sizeof(WNDCLASSEX);
