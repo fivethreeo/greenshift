@@ -1,31 +1,33 @@
 import sys
 import os
 
+minor = "10"
+
 opencv_libs = [
 "IlmImf",
 "libjasper",
 "libjpeg",
 "libpng",
 "libtiff",
-"opencv_calib3d249",
-"opencv_contrib249",
-"opencv_core249",
-"opencv_features2d249",
-"opencv_flann249",
-"opencv_gpu249",
-"opencv_highgui249",
-"opencv_imgproc249",
-"opencv_legacy249",
-"opencv_ml249",
-"opencv_nonfree249",
-"opencv_objdetect249",
-"opencv_ocl249",
-"opencv_photo249",
-"opencv_stitching249",
-"opencv_superres249",
-"opencv_ts249",
-"opencv_video249",
-"opencv_videostab249",
+"opencv_calib3d24"+minor,
+"opencv_contrib24"+minor,
+"opencv_core24"+minor,
+"opencv_features2d24"+minor,
+"opencv_flann24"+minor,
+"opencv_gpu24"+minor,
+"opencv_highgui24"+minor,
+"opencv_imgproc24"+minor,
+"opencv_legacy24"+minor,
+"opencv_ml24"+minor,
+"opencv_nonfree24"+minor,
+"opencv_objdetect24"+minor,
+"opencv_ocl24"+minor,
+"opencv_photo24"+minor,
+"opencv_stitching24"+minor,
+"opencv_superres24"+minor,
+"opencv_ts24"+minor,
+"opencv_video24"+minor,
+"opencv_videostab24"+minor,
 "zlib"]
 
 def options(opt):
@@ -46,7 +48,7 @@ def configure(conf):
     conf.env.LIB_OLE32 = 'ole32'
     conf.env.LIB_VFW32 = 'vfw32'
     
-    opencv_dir = r"D:\OpenCV\opencv\build"
+    opencv_dir = r"D:\opencv\build"
     conf.env.LIB_OPENCV = opencv_libs
     conf.env.LIBPATH_OPENCV = os.path.join(opencv_dir, "x86", "vc11", "staticlib")
     conf.env.INCLUDES_OPENCV = [os.path.join(opencv_dir, "include")]

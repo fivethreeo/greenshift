@@ -199,9 +199,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
         //morphological closing (fill small holes in the foreground)
         dilate(thresholded, thresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) ); 
         erode(thresholded, thresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
-        if (key_active) {
+        /*if (key_active) {
           tresholded.size() / countNonZero(tresholded) 
-        }
+        }*/
         imshow("thresholded", thresholded);
         }
     }
