@@ -1,1 +1,1 @@
-waf\waf configure
+waf\waf configure %*
