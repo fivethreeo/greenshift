@@ -44,10 +44,10 @@ bool key_active = FALSE;
 
 void greenDetect() {
     int fontFace = FONT_HERSHEY_SCRIPT_SIMPLEX;
-    double fontScale = 2;
-    int thickness = 3;  
+    double fontScale = 1;
+    int thickness = 1;  
     
-    Point textOrg(10, 130);
+    Point textOrg(500, 25);
     
     Mat frame, hsv, thresholded;
     
@@ -86,9 +86,16 @@ void greenDetect() {
     
       for (;;)
       {
-      
-      
-          
+        
+          try
+          {
+              boost::this_thread::interruption_point();
+          }
+          catch(boost::thread_interrupted&)
+          {
+              break;
+          }             
+
           cap >> frame; // get a new frame from capture
           cvtColor(frame, hsv, COLOR_BGR2HSV);
           
@@ -106,18 +113,12 @@ void greenDetect() {
             
           putText(thresholded,
             boost::lexical_cast<std::string>(numWhite),
-            textOrg, fontFace, fontScale, Scalar::all(255), thickness,8);
+            textOrg, fontFace, fontScale, Scalar::all(255), thickness, 8);
+            
           imshow("thresholded", thresholded);
+          
           waitKey(30);
           
-          try
-          {
-              boost::this_thread::interruption_point();
-          }
-          catch(boost::thread_interrupted&)
-          {
-              break;
-          }        
         }
     }
 }
@@ -226,8 +227,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     int yPos = 2;
 
     SetWindowPos( hwnd, 0, xPos, yPos, 0, 0, SWP_NOZORDER | SWP_NOSIZE );
+    
     int left = 0;
     HRGN visibleRgn = CreateRectRgn(0,0,0,0);
+    
     for (int i=0; i<NUM_BOUND_KEYS; i++) {
         HRGN tempRgn = CreateRectRgn(
           left,
@@ -239,10 +242,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
         CombineRgn(visibleRgn, visibleRgn, tempRgn, RGN_OR);
         DeleteObject(tempRgn);
     }
+    
     SetWindowRgn(hwnd, visibleRgn, FALSE);
     ShowWindow(hwnd, nCmdShow);
     UpdateWindow(hwnd);
-    
     
     boost::thread greenDetectThread(&greenDetect);    
 
