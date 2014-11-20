@@ -1,7 +1,9 @@
 import sys
 import os
+sys.path.append(os.path.abspath('waf/waflib/extras'))
 
-minor = "10"
+
+minor = "9"
 
 opencv_libs = [
 "IlmImf",
@@ -31,11 +33,11 @@ opencv_libs = [
 "zlib"]
 
 def options(opt):
-    opt.load('cxx msvc')
+    opt.load('cxx msvc boost')
 
 def configure(conf):
-
-    conf.load('cxx msvc')
+    conf.load('cxx msvc boost')
+    conf.check_boost(lib='system filesystem')
     conf.env['MSVC_TARGETS'] = ['x86']
 
     conf.env.LIB_ADVAPI32 = 'advapi32'
@@ -52,7 +54,7 @@ def configure(conf):
     conf.env.LIB_OPENCV = opencv_libs
     conf.env.LIBPATH_OPENCV = os.path.join(opencv_dir, "x86", "vc11", "staticlib")
     conf.env.INCLUDES_OPENCV = [os.path.join(opencv_dir, "include")]
-    conf.env.CXXFLAGS_OPENCV = ''
+    conf.env.CXXFLAGS = '/EHsc'
     if sys.platform == 'win32':
         pass
 
@@ -62,13 +64,13 @@ def build(bld):
        features='cxx',
        source='testbed.cpp',
        target='testbed',
-       use='OPENCV WS2_32 KERNEL32 USER32 GDI32 ADVAPI32 COMCTL32 OLEAUT32 OLE32 VFW32'
+       use='OPENCV WS2_32 KERNEL32 USER32 GDI32 ADVAPI32 COMCTL32 OLEAUT32 OLE32 VFW32 BOOST'
 
     )
     tg = bld.program(
        features='cxx',
        source='greenshift.cpp',
        target='greenshift',
-       use='OPENCV WS2_32 KERNEL32 USER32 GDI32 ADVAPI32 COMCTL32 OLEAUT32 OLE32 VFW32'
+       use='OPENCV WS2_32 KERNEL32 USER32 GDI32 ADVAPI32 COMCTL32 OLEAUT32 OLE32 VFW32 BOOST'
 
     )

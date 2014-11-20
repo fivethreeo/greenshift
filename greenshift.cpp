@@ -1,10 +1,14 @@
-#include "opencv2/opencv.hpp"
-
-#include <stdlib.h>
 #include <array>
 #include <string>
 
+#include <stdlib.h>
+
+#include "opencv2/opencv.hpp"
+#include <boost/thread.hpp>
+#include <boost/lexical_cast.hpp>
+
 #include <windows.h>
+
 #define NUM_BOUND_KEYS 3
 
 using namespace cv;
@@ -37,6 +41,86 @@ boundKey getById(int id) {
 
 boundKey activeKey;
 bool key_active = FALSE;
+
+void greenDetect() {
+    int fontFace = FONT_HERSHEY_SCRIPT_SIMPLEX;
+    double fontScale = 2;
+    int thickness = 3;  
+    
+    Point textOrg(10, 130);
+    
+    Mat frame, hsv, thresholded;
+    
+    int numWhite = 0;
+    
+    int iLowH = 69;
+    int iHighH = 101;
+    /*
+    int iLowH = 32;
+    int iHighH = 51;
+    */        
+    int iLowS = 18; 
+    int iHighS = 255;
+    
+    int iLowV = 72;
+    int iHighV = 239;
+    
+    namedWindow("Control", CV_WINDOW_AUTOSIZE); //create a window called "Control"
+    
+    //Create trackbars in "Control" window
+    cvCreateTrackbar("LowH", "Control", &iLowH, 179); //Hue (0 - 179)
+    cvCreateTrackbar("HighH", "Control", &iHighH, 179);
+    
+    cvCreateTrackbar("LowS", "Control", &iLowS, 255); //Saturation (0 - 255)
+    cvCreateTrackbar("HighS", "Control", &iHighS, 255);
+    
+    cvCreateTrackbar("LowV", "Control", &iLowV, 255); //Value (0 - 255)
+    cvCreateTrackbar("HighV", "Control", &iHighV, 255);
+    
+    VideoCapture cap(0); // open the default camera
+    
+    if(cap.isOpened()) {
+    
+      namedWindow("thresholded", 1);
+      waitKey(1000); // Wait for camera so frame won't be empty
+    
+      for (;;)
+      {
+      
+      
+          
+          cap >> frame; // get a new frame from capture
+          cvtColor(frame, hsv, COLOR_BGR2HSV);
+          
+          inRange(hsv, Scalar(iLowH, iLowS, iLowV), Scalar(iHighH, iHighS, iHighV), thresholded); //Threshold the image
+          
+          //morphological opening (remove small objects from the foreground)
+          erode(thresholded, thresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
+          dilate(thresholded, thresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) ); 
+          
+          //morphological closing (fill small holes in the foreground)
+          dilate(thresholded, thresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) ); 
+          erode(thresholded, thresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
+          
+          numWhite = countNonZero(thresholded);
+            
+          putText(thresholded,
+            boost::lexical_cast<std::string>(numWhite),
+            textOrg, fontFace, fontScale, Scalar::all(255), thickness,8);
+          imshow("thresholded", thresholded);
+          waitKey(30);
+          
+          try
+          {
+              boost::this_thread::interruption_point();
+          }
+          catch(boost::thread_interrupted&)
+          {
+              break;
+          }        
+        }
+    }
+}
 
 // Step 4: the Window Procedure
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -95,32 +179,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     HWND hwnd;
     MSG Message;
     Message.message = ~WM_QUIT;
-    Mat frame, hsv, thresholded;
-    /*
-    int iLowH = 69;
-    int iHighH = 101;
-    */
-    int iLowH = 32;
-    int iHighH = 51;
-        
-    int iLowS = 18; 
-    int iHighS = 255;
-    
-    int iLowV = 72;
-    int iHighV = 239;
-    
-    namedWindow("Control", CV_WINDOW_AUTOSIZE); //create a window called "Control"
 
- //Create trackbars in "Control" window
- cvCreateTrackbar("LowH", "Control", &iLowH, 179); //Hue (0 - 179)
- cvCreateTrackbar("HighH", "Control", &iHighH, 179);
-
-  cvCreateTrackbar("LowS", "Control", &iLowS, 255); //Saturation (0 - 255)
- cvCreateTrackbar("HighS", "Control", &iHighS, 255);
-
-  cvCreateTrackbar("LowV", "Control", &iLowV, 255); //Value (0 - 255)
- cvCreateTrackbar("HighV", "Control", &iHighV, 255);
-    
     //Step 1: Registering the Window Class
     wc.cbSize        = sizeof(WNDCLASSEX);
     wc.style         = 0;
@@ -184,14 +243,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     ShowWindow(hwnd, nCmdShow);
     UpdateWindow(hwnd);
     
-    VideoCapture cap(0); // open the default camera
-    if(!cap.isOpened())  // check if we succeeded
-        return -1;
     
-    namedWindow("thresholded", 1);
-        
-    waitKey(1000); // Wait for camera so frame won't be empty
-    
+    boost::thread greenDetectThread(&greenDetect);    
+
     while (Message.message != WM_QUIT)
     {
         if (PeekMessage(&Message, NULL, 0, 0, PM_REMOVE))
@@ -200,25 +254,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
             TranslateMessage(&Message);
             DispatchMessage(&Message);
         }
-        else
-        { 
-        cap >> frame; // get a new frame from capture
-        cvtColor(frame, hsv, COLOR_BGR2HSV);
-        
-        inRange(hsv, Scalar(iLowH, iLowS, iLowV), Scalar(iHighH, iHighS, iHighV), thresholded); //Threshold the image
-        
-        //morphological opening (remove small objects from the foreground)
-        erode(thresholded, thresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
-        dilate(thresholded, thresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) ); 
-        
-        //morphological closing (fill small holes in the foreground)
-        dilate(thresholded, thresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) ); 
-        erode(thresholded, thresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
-        /*if (key_active) {
-          tresholded.size() / countNonZero(tresholded) 
-        }*/
-        imshow("thresholded", thresholded);
-        }
+
     }
+    
+    greenDetectThread.interrupt();
+    greenDetectThread.join();
+    
     return Message.wParam;
 }
