@@ -159,12 +159,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             {
               case STN_CLICKED:
               {
-                if (key_active) key_active = FALSE;
-                else key_active = TRUE;
                 int id = (int)LOWORD(wParam);
                 activeKey = getById(id);
-                
-            SendMessage(hwnd, WM_CTLCOLORSTATIC, 0, 0);
+                InvalidateRect((HWND)LOWORD(wParam), 0, TRUE);
               }
             }
         }
@@ -172,17 +169,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         case WM_CTLCOLORSTATIC:
         {
             if (activeKey != NULL) {
-                MessageBox(NULL, boost::lexical_cast<std::string>((int)LOWORD(lParam)).c_str(), "Error!",
-            MB_ICONEXCLAMATION | MB_OK);
-            if ((HWND)LOWORD(wParam) == GetDlgItem(hwnd, activeKey->id)) {
-                HDC hdcStatic = (HDC) wParam;
-                SetTextColor(hdcStatic, RGB(255,255,255));
-                SetBkColor(hdcStatic, RGB(0,0,0));
                 
-                if (hbrBkgnd == NULL)
-                {
-                    hbrBkgnd = CreateSolidBrush(RGB(0,0,0));
-                }
+                if ((int)GetDlgCtrlID((HWND)LOWORD(wParam)) == activeKey->id) {
+                    HDC hdcStatic = (HDC) wParam;
+                    SetTextColor(hdcStatic, RGB(255,255,255));
+                    SetBkColor(hdcStatic, RGB(0,0,0));
+                    
+                    if (hbrBkgnd == NULL)
+                    {
+                        hbrBkgnd = CreateSolidBrush(RGB(0,0,0));
+                    }
                 return (INT_PTR)hbrBkgnd; 
                 }
             }
