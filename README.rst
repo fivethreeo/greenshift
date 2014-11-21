@@ -15,4 +15,4 @@ Open a cmd shell in this dir and run
 
     run.bat
 
-.. _visualc++ express 11: http://go.gle
+.. _`visualc++ express 11`: http://go.gle
