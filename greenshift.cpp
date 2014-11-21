@@ -28,18 +28,18 @@ struct boundKey boundKeys[NUM_BOUND_KEYS] = {
   {3, "Alt", 40, 18}
 };
 
-boundKey getById(int id) {
-  boundKey key;
+boundKey *getById(int id) {
+  boundKey *key;
   for (int i=0; i<NUM_BOUND_KEYS; i++) {
     if (boundKeys[i].id == id) {
-      key=boundKeys[i];
+      key=&boundKeys[i];
       break;
     }
   }
   return key;
 }
 
-boundKey activeKey;
+boundKey *activeKey = NULL;
 bool key_active = FALSE;
 
 void greenDetect() {
@@ -122,7 +122,7 @@ void greenDetect() {
         }
     }
 }
-
+HBRUSH hbrBkgnd = NULL; 
 // Step 4: the Window Procedure
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -140,7 +140,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             for (int i=0; i<NUM_BOUND_KEYS; i++) {
               HFONT hfDefault;
               HWND hStatic;
-      
               hStatic = CreateWindowEx(WS_EX_CLIENTEDGE, "Static", boundKeys[i].text.c_str(), 
                   WS_CHILD | WS_VISIBLE | SS_CENTER | SS_NOTIFY, 
                   0, 0, boundKeys[i].width, boundKeys[i].height, hwnd, (HMENU)boundKeys[i].id, GetModuleHandle(NULL), NULL);
@@ -162,8 +161,30 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
               {
                 if (key_active) key_active = FALSE;
                 else key_active = TRUE;
-                activeKey = boundKeys[(int)LOWORD(wParam)];
+                int id = (int)LOWORD(wParam);
+                activeKey = getById(id);
+                
+            SendMessage(hwnd, WM_CTLCOLORSTATIC, 0, 0);
               }
+            }
+        }
+        break;
+        case WM_CTLCOLORSTATIC:
+        {
+            if (activeKey != NULL) {
+                MessageBox(NULL, boost::lexical_cast<std::string>((int)LOWORD(lParam)).c_str(), "Error!",
+            MB_ICONEXCLAMATION | MB_OK);
+            if ((HWND)LOWORD(wParam) == GetDlgItem(hwnd, activeKey->id)) {
+                HDC hdcStatic = (HDC) wParam;
+                SetTextColor(hdcStatic, RGB(255,255,255));
+                SetBkColor(hdcStatic, RGB(0,0,0));
+                
+                if (hbrBkgnd == NULL)
+                {
+                    hbrBkgnd = CreateSolidBrush(RGB(0,0,0));
+                }
+                return (INT_PTR)hbrBkgnd; 
+                }
             }
         }
         break;

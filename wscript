@@ -2,59 +2,56 @@ import sys
 import os
 sys.path.append(os.path.abspath('waf/waflib/extras'))
 
-
-minor = "9"
-
 opencv_libs = [
-"IlmImf",
-"libjasper",
-"libjpeg",
-"libpng",
-"libtiff",
-"opencv_calib3d24"+minor,
-"opencv_contrib24"+minor,
-"opencv_core24"+minor,
-"opencv_features2d24"+minor,
-"opencv_flann24"+minor,
-"opencv_gpu24"+minor,
-"opencv_highgui24"+minor,
-"opencv_imgproc24"+minor,
-"opencv_legacy24"+minor,
-"opencv_ml24"+minor,
-"opencv_nonfree24"+minor,
-"opencv_objdetect24"+minor,
-"opencv_ocl24"+minor,
-"opencv_photo24"+minor,
-"opencv_stitching24"+minor,
-"opencv_superres24"+minor,
-"opencv_ts24"+minor,
-"opencv_video24"+minor,
-"opencv_videostab24"+minor,
-"zlib"]
+    "IlmImf",
+    "libjasper",
+    "libjpeg",
+    "libpng",
+    "libtiff",
+    "opencv_calib3d%(ver)s",
+    "opencv_contrib%(ver)s",
+    "opencv_core%(ver)s",
+    "opencv_features2d%(ver)s",
+    "opencv_flann%(ver)s",
+    "opencv_gpu%(ver)s",
+    "opencv_highgui%(ver)s",
+    "opencv_imgproc%(ver)s",
+    "opencv_legacy%(ver)s",
+    "opencv_ml%(ver)s",
+    "opencv_nonfree%(ver)s",
+    "opencv_objdetect%(ver)s",
+    "opencv_ocl%(ver)s",
+    "opencv_photo%(ver)s",
+    "opencv_stitching%(ver)s",
+    "opencv_superres%(ver)s",
+    "opencv_ts%(ver)s",
+    "opencv_video%(ver)s",
+    "opencv_videostab%(ver)s",
+    "zlib"
+]
 
 def options(opt):
     opt.load('cxx msvc boost')
-
+    opt.add_option('--opencv-lib', dest='opencv_lib', action='store',
+        default=False, help='Path to opencv libs')
+    opt.add_option('--opencv-include', dest='opencv_include', action='store',
+        default=False, help='Path to opencv includes')
+    opt.add_option('--opencv-ver', dest='opencv_ver', action='store',
+        default=False, help='Opencv lib version')
+                
 def configure(conf):
     conf.load('cxx msvc boost')
-    conf.check_boost(lib='system filesystem')
     conf.env['MSVC_TARGETS'] = ['x86']
-
-    conf.env.LIB_ADVAPI32 = 'advapi32'
-    conf.env.LIB_WS2_32 = 'ws2_32'
-    conf.env.LIB_KERNEL32 = 'kernel32'
-    conf.env.LIB_USER32 = 'user32'
-    conf.env.LIB_GDI32 = 'gdi32'
-    conf.env.LIB_COMCTL32 = 'comctl32'
-    conf.env.LIB_OLEAUT32 = 'oleaut32'
-    conf.env.LIB_OLE32 = 'ole32'
-    conf.env.LIB_VFW32 = 'vfw32'
     
-    opencv_dir = r"D:\opencv\build"
-    conf.env.LIB_OPENCV = opencv_libs
-    conf.env.LIBPATH_OPENCV = os.path.join(opencv_dir, "x86", "vc11", "staticlib")
-    conf.env.INCLUDES_OPENCV = [os.path.join(opencv_dir, "include")]
+    conf.check_libs_msvc('kernel32 user32 gdi32 oleaut32 ole32 comctl32 vfw32 ws2_32 advapi32')
+    conf.check_boost(stlib='thread system filesystem')
+
+    conf.env.LIB_OPENCV = [opencv_lib % {'ver':conf.options.opencv_ver} for opencv_lib in opencv_libs]
+    conf.env.LIBPATH_OPENCV = conf.options.opencv_lib
+    conf.env.INCLUDES_OPENCV = conf.options.opencv_include
+    
     conf.env.CXXFLAGS = '/EHsc'
+    
     if sys.platform == 'win32':
         pass
 
