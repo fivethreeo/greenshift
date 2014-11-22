@@ -39,8 +39,12 @@ boundKey *getById(int id) {
   return key;
 }
 
+boundKey *selectedKey = NULL;
 boundKey *activeKey = NULL;
-bool key_active = FALSE;
+
+HBRUSH hbrBkgndD = NULL;
+HBRUSH hbrBkgndS = NULL;
+HBRUSH hbrBkgndA = NULL;
 
 void greenDetect() {
     int fontFace = FONT_HERSHEY_SCRIPT_SIMPLEX;
@@ -122,7 +126,7 @@ void greenDetect() {
         }
     }
 }
-HBRUSH hbrBkgnd = NULL; 
+
 // Step 4: the Window Procedure
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -160,28 +164,45 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
               case STN_CLICKED:
               {
                 int id = (int)LOWORD(wParam);
-                activeKey = getById(id);
-                InvalidateRect((HWND)LOWORD(wParam), 0, TRUE);
+                selectedKey = getById(id);
+                InvalidateRect(hwnd, 0, TRUE);
               }
             }
         }
         break;
         case WM_CTLCOLORSTATIC:
         {
-            if (activeKey != NULL) {
-                
-                if ((int)GetDlgCtrlID((HWND)LOWORD(wParam)) == activeKey->id) {
-                    HDC hdcStatic = (HDC) wParam;
-                    SetTextColor(hdcStatic, RGB(255,255,255));
-                    SetBkColor(hdcStatic, RGB(0,0,0));
-                    
-                    if (hbrBkgnd == NULL)
-                    {
-                        hbrBkgnd = CreateSolidBrush(RGB(0,0,0));
-                    }
-                return (INT_PTR)hbrBkgnd; 
-                }
+          if ( activeKey != NULL && (int)GetDlgCtrlID((HWND)lParam) == activeKey->id) {
+            HDC hdcStatic = (HDC) wParam;
+            SetTextColor(hdcStatic, RGB(255,255,255));
+            SetBkColor(hdcStatic, RGB(0,0,0));
+              
+            if (hbrBkgndA == NULL)
+            {
+                hbrBkgndA = CreateSolidBrush(RGB(0,0,0));
             }
+          return (INT_PTR)hbrBkgndA; 
+          } else if ( selectedKey != NULL && (int)GetDlgCtrlID((HWND)lParam) == selectedKey->id) {
+            HDC hdcStatic = (HDC) wParam;
+            SetTextColor(hdcStatic, RGB(255,255,255));
+            SetBkColor(hdcStatic, RGB(0,0,0));
+              
+            if (hbrBkgndS == NULL)
+            {
+                hbrBkgndS = CreateSolidBrush(RGB(0,0,0));
+            }
+          return (INT_PTR)hbrBkgndS; 
+          } else {
+            HDC hdcStatic = (HDC) wParam;
+            SetTextColor(hdcStatic, RGB(0,0,0));
+            SetBkColor(hdcStatic, RGB(255,255,255));
+              
+            if (hbrBkgndD == NULL)
+            {
+              hbrBkgndD = CreateSolidBrush(RGB(255,255,255));
+            }
+            return (INT_PTR)hbrBkgndD;
+          }
         }
         break;
         default:
