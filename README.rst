@@ -7,7 +7,7 @@ Make sure you have `visualc++ express 11`_, `opencv libs/headers`_, `boost libs/
 
 Open a cmd shell in this dir and run
 
-Edit flags in configure.bat to reflect include/library locations
+Edit flags in configure.bat to reflect include/library locations.
 
 .. code-block:: bash
 
