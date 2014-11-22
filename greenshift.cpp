@@ -7,6 +7,7 @@
 #include <boost/thread.hpp>
 #include <boost/lexical_cast.hpp>
 
+#define WINVER 0x0500
 #include <windows.h>
 
 #define NUM_BOUND_KEYS 3
@@ -20,12 +21,13 @@ struct boundKey {
     std::string text;
     int width;
     int height;
+    WORD virtualKey;
 };
     
 struct boundKey boundKeys[NUM_BOUND_KEYS] = {
-  {1, "Shift", 40, 18},
-  {2, "Ctrl", 40, 18},
-  {3, "Alt", 40, 18}
+  {1, "Shift", 40, 18, VK_SHIFT},
+  {2, "Ctrl", 40, 18, VK_CONTROL},
+  {3, "Alt", 40, 18, VK_MENU}
 };
 
 boundKey *getById(int id) {
@@ -37,6 +39,25 @@ boundKey *getById(int id) {
     }
   }
   return key;
+}
+
+void sendBoundKey(WORD virtualKey, bool down) {
+  
+    INPUT ip;
+    
+    // Set up a generic keyboard event.
+    ip.type = INPUT_KEYBOARD;
+    ip.ki.wScan = 0; // hardware scan code for key
+    ip.ki.time = 0;
+    ip.ki.dwExtraInfo = 0;
+ 
+    // Press the key
+    ip.ki.wVk = virtualKey; // virtual-key code for the "a" key
+    ip.ki.dwFlags = 0; // 0 for key press
+    if (!down) {
+      ip.ki.dwFlags = KEYEVENTF_KEYUP;
+    }
+    SendInput(1, &ip, sizeof(INPUT));
 }
 
 boundKey *selectedKey = NULL;
@@ -57,17 +78,17 @@ void greenDetect() {
     
     int numWhite = 0;
     
-    int iLowH = 69;
-    int iHighH = 101;
+    int iLowH = 34;
+    int iHighH = 72;
     /*
     int iLowH = 32;
     int iHighH = 51;
     */        
-    int iLowS = 18; 
-    int iHighS = 255;
+    int iLowS = 29; 
+    int iHighS = 142;
     
-    int iLowV = 72;
-    int iHighV = 239;
+    int iLowV = 3;
+    int iHighV = 255;
     
     namedWindow("Control", CV_WINDOW_AUTOSIZE); //create a window called "Control"
     
@@ -98,7 +119,7 @@ void greenDetect() {
           catch(boost::thread_interrupted&)
           {
               break;
-          }             
+          }
 
           cap >> frame; // get a new frame from capture
           cvtColor(frame, hsv, COLOR_BGR2HSV);
@@ -118,6 +139,19 @@ void greenDetect() {
           putText(thresholded,
             boost::lexical_cast<std::string>(numWhite),
             textOrg, fontFace, fontScale, Scalar::all(255), thickness, 8);
+          
+          if (numWhite > 10000 ) {
+            if (activeKey == NULL && selectedKey != NULL) {
+              activeKey = selectedKey;
+              sendBoundKey(activeKey->virtualKey, TRUE);
+            }
+          } else {
+            if (activeKey != NULL) {
+              sendBoundKey(activeKey->virtualKey, FALSE);
+              activeKey = NULL; 
+            } 
+          }
+            
             
           imshow("thresholded", thresholded);
           
