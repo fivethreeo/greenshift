@@ -52,7 +52,7 @@ void sendBoundKey(WORD virtualKey, bool down) {
     ip.ki.dwExtraInfo = 0;
  
     // Press the key
-    ip.ki.wVk = virtualKey; // virtual-key code for the "a" key
+    ip.ki.wVk = virtualKey; // virtual-key code for the key
     ip.ki.dwFlags = 0; // 0 for key press
     if (!down) {
       ip.ki.dwFlags = KEYEVENTF_KEYUP;
@@ -67,7 +67,8 @@ HBRUSH hbrBkgndD = NULL;
 HBRUSH hbrBkgndS = NULL;
 HBRUSH hbrBkgndA = NULL;
 
-void greenDetect() {
+
+void greenDetect(HWND hwnd) {
     int fontFace = FONT_HERSHEY_SCRIPT_SIMPLEX;
     double fontScale = 1;
     int thickness = 1;  
@@ -78,8 +79,8 @@ void greenDetect() {
     
     int numWhite = 0;
     
-    int iLowH = 34;
-    int iHighH = 72;
+    int iLowH = 75;
+    int iHighH = 104;
     /*
     int iLowH = 32;
     int iHighH = 51;
@@ -87,7 +88,7 @@ void greenDetect() {
     int iLowS = 29; 
     int iHighS = 142;
     
-    int iLowV = 3;
+    int iLowV = 38;
     int iHighV = 255;
     
     namedWindow("Control", CV_WINDOW_AUTOSIZE); //create a window called "Control"
@@ -143,13 +144,16 @@ void greenDetect() {
           if (numWhite > 10000 ) {
             if (activeKey == NULL && selectedKey != NULL) {
               activeKey = selectedKey;
-              sendBoundKey(activeKey->virtualKey, TRUE);
+              sendBoundKey(activeKey->virtualKey, TRUE); 
+              InvalidateRect(hwnd, 0, TRUE);
             }
           } else {
             if (activeKey != NULL) {
               sendBoundKey(activeKey->virtualKey, FALSE);
               activeKey = NULL; 
-            } 
+              InvalidateRect(hwnd, 0, TRUE);
+
+            }
           }
             
             
@@ -171,6 +175,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             DestroyWindow(hwnd);
         break;
         case WM_DESTROY:
+            DeleteObject(hbrBkgndD);
+            DeleteObject(hbrBkgndS);
+            DeleteObject(hbrBkgndA);
             PostQuitMessage(0);
         case WM_CREATE:
         {
@@ -197,8 +204,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             {
               case STN_CLICKED:
               {
+                
                 int id = (int)LOWORD(wParam);
-                selectedKey = getById(id);
+                boundKey *tempSelectedKey = getById(id);
+                if (selectedKey != NULL && activeKey == NULL) {
+                  if (selectedKey == tempSelectedKey) selectedKey = NULL;
+                  else selectedKey = tempSelectedKey;
+                }
+                else if (selectedKey == NULL) selectedKey = tempSelectedKey;
+
                 InvalidateRect(hwnd, 0, TRUE);
               }
             }
@@ -208,22 +222,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         {
           if ( activeKey != NULL && (int)GetDlgCtrlID((HWND)lParam) == activeKey->id) {
             HDC hdcStatic = (HDC) wParam;
-            SetTextColor(hdcStatic, RGB(255,255,255));
-            SetBkColor(hdcStatic, RGB(0,0,0));
+            SetTextColor(hdcStatic, RGB(0,0,0));
+            SetBkColor(hdcStatic, RGB(70,255,70));
               
             if (hbrBkgndA == NULL)
             {
-                hbrBkgndA = CreateSolidBrush(RGB(0,0,0));
+                hbrBkgndA = CreateSolidBrush(RGB(70,255,70));
             }
           return (INT_PTR)hbrBkgndA; 
           } else if ( selectedKey != NULL && (int)GetDlgCtrlID((HWND)lParam) == selectedKey->id) {
             HDC hdcStatic = (HDC) wParam;
             SetTextColor(hdcStatic, RGB(255,255,255));
-            SetBkColor(hdcStatic, RGB(0,0,0));
+            SetBkColor(hdcStatic, RGB(70,70,255));
               
             if (hbrBkgndS == NULL)
             {
-                hbrBkgndS = CreateSolidBrush(RGB(0,0,0));
+                hbrBkgndS = CreateSolidBrush(RGB(70,70,255));
             }
           return (INT_PTR)hbrBkgndS; 
           } else {
@@ -245,6 +259,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
+
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     LPSTR lpCmdLine, int nCmdShow)
 {
@@ -252,7 +267,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     HWND hwnd;
     MSG Message;
     Message.message = ~WM_QUIT;
-
+    
     //Step 1: Registering the Window Class
     wc.cbSize        = sizeof(WNDCLASSEX);
     wc.style         = 0;
@@ -278,7 +293,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     hwnd = CreateWindowEx(
         WS_EX_TOPMOST,
         g_szClassName,
-        "The title of my window",
+        "Greenshift",
         WS_POPUP ,
         CW_USEDEFAULT, CW_USEDEFAULT, 240, 60,
         NULL, NULL, hInstance, NULL);
@@ -319,7 +334,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     ShowWindow(hwnd, nCmdShow);
     UpdateWindow(hwnd);
     
-    boost::thread greenDetectThread(&greenDetect);    
+    boost::thread greenDetectThread(&greenDetect, hwnd);    
 
     while (Message.message != WM_QUIT)
     {
