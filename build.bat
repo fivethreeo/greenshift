@@ -1,1 +1,1 @@
-waf\waf build
+python waf build

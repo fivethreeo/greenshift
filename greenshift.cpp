@@ -3,7 +3,9 @@
 
 #include <stdlib.h>
 
-#include "opencv2/opencv.hpp"
+#include "opencv2/core.hpp"
+#include "opencv2/highgui.hpp"
+#include "opencv2/imgproc.hpp"
 #include <boost/thread.hpp>
 #include <boost/lexical_cast.hpp>
 
@@ -11,8 +13,6 @@
 #include <windows.h>
 
 #define NUM_BOUND_KEYS 3
-
-using namespace cv;
 
 const char g_szClassName[] = "greenshift";
 
@@ -69,13 +69,13 @@ HBRUSH hbrBkgndA = NULL;
 
 
 void greenDetect(HWND hwnd) {
-    int fontFace = FONT_HERSHEY_SCRIPT_SIMPLEX;
+    int fontFace = cv::FONT_HERSHEY_SCRIPT_SIMPLEX;
     double fontScale = 1;
     int thickness = 1;  
     
-    Point textOrg(500, 25);
+    cv::Point textOrg(500, 25);
     
-    Mat frame, hsv, thresholded;
+    cv::Mat frame, hsv, thresholded;
     
     int numWhite = 0;
     
@@ -91,24 +91,24 @@ void greenDetect(HWND hwnd) {
     int iLowV = 38;
     int iHighV = 255;
     
-    namedWindow("Control", CV_WINDOW_AUTOSIZE); //create a window called "Control"
+    cv::namedWindow("Control", cv::WINDOW_AUTOSIZE); //create a window called "Control"
     
     //Create trackbars in "Control" window
-    cvCreateTrackbar("LowH", "Control", &iLowH, 179); //Hue (0 - 179)
-    cvCreateTrackbar("HighH", "Control", &iHighH, 179);
+    cv::createTrackbar("LowH", "Control", &iLowH, 179); //Hue (0 - 179)
+    cv::createTrackbar("HighH", "Control", &iHighH, 179);
     
-    cvCreateTrackbar("LowS", "Control", &iLowS, 255); //Saturation (0 - 255)
-    cvCreateTrackbar("HighS", "Control", &iHighS, 255);
+    cv::createTrackbar("LowS", "Control", &iLowS, 255); //Saturation (0 - 255)
+    cv::createTrackbar("HighS", "Control", &iHighS, 255);
     
-    cvCreateTrackbar("LowV", "Control", &iLowV, 255); //Value (0 - 255)
-    cvCreateTrackbar("HighV", "Control", &iHighV, 255);
+    cv::createTrackbar("LowV", "Control", &iLowV, 255); //Value (0 - 255)
+    cv::createTrackbar("HighV", "Control", &iHighV, 255);
     
-    VideoCapture cap(0); // open the default camera
+    cv::VideoCapture cap(0); // open the default camera
     
     if(cap.isOpened()) {
     
-      namedWindow("thresholded", 1);
-      waitKey(1000); // Wait for camera so frame won't be empty
+      cv::namedWindow("thresholded", 1);
+      cv::waitKey(1000); // Wait for camera so frame won't be empty
     
       for (;;)
       {
@@ -123,23 +123,23 @@ void greenDetect(HWND hwnd) {
           }
 
           cap >> frame; // get a new frame from capture
-          cvtColor(frame, hsv, COLOR_BGR2HSV);
+          cv::cvtColor(frame, hsv, cv::COLOR_BGR2HSV);
           
-          inRange(hsv, Scalar(iLowH, iLowS, iLowV), Scalar(iHighH, iHighS, iHighV), thresholded); //Threshold the image
+          cv::inRange(hsv, cv::Scalar(iLowH, iLowS, iLowV), cv::Scalar(iHighH, iHighS, iHighV), thresholded); //Threshold the image
           
           //morphological opening (remove small objects from the foreground)
-          erode(thresholded, thresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
-          dilate(thresholded, thresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) ); 
+          cv::erode(thresholded, thresholded, cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(5, 5)) );
+          cv::dilate(thresholded, thresholded, cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(5, 5)) ); 
           
           //morphological closing (fill small holes in the foreground)
-          dilate(thresholded, thresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) ); 
-          erode(thresholded, thresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
+          cv::dilate(thresholded, thresholded, getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(5, 5)) ); 
+          cv::erode(thresholded, thresholded, getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(5, 5)) );
           
-          numWhite = countNonZero(thresholded);
+          numWhite = cv::countNonZero(thresholded);
             
-          putText(thresholded,
+          cv::putText(thresholded,
             boost::lexical_cast<std::string>(numWhite),
-            textOrg, fontFace, fontScale, Scalar::all(255), thickness, 8);
+            textOrg, fontFace, fontScale, cv::Scalar::all(255), thickness, 8);
           
           if (numWhite > 10000 ) {
             if (activeKey == NULL && selectedKey != NULL) {
@@ -157,9 +157,9 @@ void greenDetect(HWND hwnd) {
           }
             
             
-          imshow("thresholded", thresholded);
+          cv::imshow("thresholded", thresholded);
           
-          waitKey(30);
+          cv::waitKey(30);
           
         }
     }

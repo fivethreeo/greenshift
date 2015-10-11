@@ -1,8 +1,9 @@
-waf\waf configure^
-  --boost-include=D:\boost_1_57_0^
-  --boost-lib=D:\boost_1_57_0\lib32-msvc-11.0^
+call variables.bat
+python waf configure^
+  --boost-includes=%BOOST_ROOT%^
+  --boost-libs=%BOOST_LIBRARYDIR%^
   --boost-mt^
-  --opencv-lib=D:\opencv\build\x86\vc11\staticlib^
-  --opencv-include=D:\opencv\build\include^
-  --opencv-ver=249^
+  --opencv-lib=%CD%\opencv_build\install\x64\vc14\staticlib^
+  --opencv-include=%CD%\opencv_build\install\include^
+  --opencv-ver=300^
   %*

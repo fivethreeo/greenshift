@@ -215,6 +215,7 @@ pip-log.txt
 #Mr Developer
 .mr.developer.cfg
 
-waf/
-
+waf*
+cpp-netlib*
+opencv*
 *.lock-waf*
